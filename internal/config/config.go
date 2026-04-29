@@ -32,7 +32,7 @@ func Load() (Config, error) {
 
 	flag.Parse()
 
-	cfg.JWTSecret = envOrDefault("JWT_SECRET", "")
+	cfg.JWTSecret = envOrDefault("JWT_SECRET", "x1x2x3x4x5x6")
 	cfg.JWTAccessTTL = envDurationOrDefault("JWT_ACCESS_TTL", 30*24*time.Hour)
 
 	cfg.AccrualWorkers = envIntOrDefault("ACCRUAL_WORKERS", 5)
