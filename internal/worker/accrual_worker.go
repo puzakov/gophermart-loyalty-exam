@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"log/slog"
+	"math"
 	"sync"
 	"time"
 
@@ -140,7 +141,7 @@ func (p *AccrualWorkerPool) processOne(ctx context.Context, workerID int, number
 	if err := p.orders.ApplyAccrual(ctx, postgres.ApplyAccrualParams{
 		Number:  number,
 		Status:  status,
-		Accrual: info.Accrual,
+		Accrual: convertAccrualToMinor(info.Accrual),
 		Now:     time.Now(),
 	}); err != nil {
 		p.log.Error("apply accrual", "order", number, "err", err)
@@ -153,4 +154,13 @@ func (p *AccrualWorkerPool) applyRateLimit(until time.Time) {
 	if until.After(p.rateLimitUntil) {
 		p.rateLimitUntil = until
 	}
+}
+
+func convertAccrualToMinor(accrual *float64) *int64 {
+	if accrual == nil {
+		return nil
+	}
+	// переводим в центы
+	v := int64(math.Round(*accrual * 100))
+	return &v
 }
