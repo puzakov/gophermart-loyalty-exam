@@ -8,17 +8,6 @@ CREATE TABLE users (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE refresh_tokens (
-  id           BIGSERIAL PRIMARY KEY,
-  user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token_hash   TEXT NOT NULL UNIQUE,
-  expires_at   TIMESTAMPTZ NOT NULL,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  revoked_at   TIMESTAMPTZ
-);
-
-CREATE INDEX refresh_tokens_user_idx ON refresh_tokens(user_id);
-
 CREATE TABLE accounts (
   user_id    BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   current    BIGINT NOT NULL DEFAULT 0,
@@ -59,6 +48,5 @@ DROP TABLE IF EXISTS withdrawals;
 DROP TABLE IF EXISTS orders;
 DROP TYPE IF EXISTS order_status;
 DROP TABLE IF EXISTS accounts;
-DROP TABLE IF EXISTS refresh_tokens;
 DROP TABLE IF EXISTS users;
 -- +goose StatementEnd

@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"time"
@@ -12,23 +10,21 @@ import (
 )
 
 type TokenManager struct {
-	secret     []byte
-	accessTTL  time.Duration
-	refreshTTL time.Duration
+	secret    []byte
+	accessTTL time.Duration
 }
 
 type AccessClaims struct {
 	jwt.RegisteredClaims
 }
 
-func NewTokenManager(secret string, accessTTL, refreshTTL time.Duration) (*TokenManager, error) {
+func NewTokenManager(secret string, accessTTL time.Duration) (*TokenManager, error) {
 	if secret == "" {
 		return nil, errors.New("JWT_SECRET is required")
 	}
 	return &TokenManager{
-		secret:     []byte(secret),
-		accessTTL:  accessTTL,
-		refreshTTL: refreshTTL,
+		secret:    []byte(secret),
+		accessTTL: accessTTL,
 	}, nil
 }
 
@@ -72,29 +68,4 @@ func (m *TokenManager) ParseAccessToken(tokenString string) (userID int64, err e
 		return 0, errors.New("invalid token")
 	}
 	return atoi64(claims.Subject)
-}
-
-func (m *TokenManager) NewRefreshToken(now time.Time) (raw string, hash string, expiresAt time.Time, err error) {
-	b := make([]byte, 32)
-	if _, err = rand.Read(b); err != nil {
-		return "", "", time.Time{}, err
-	}
-	raw = base64.RawURLEncoding.EncodeToString(b)
-	expiresAt = now.Add(m.refreshTTL)
-	hash = HashRefreshToken(raw)
-	return raw, hash, expiresAt, nil
-}
-
-func HashRefreshToken(raw string) string {
-	h := sha256.Sum256([]byte(raw))
-	return base64.RawURLEncoding.EncodeToString(h[:])
-}
-
-func SecureCompareHash(a, b string) bool {
-	aa, err1 := base64.RawURLEncoding.DecodeString(a)
-	bb, err2 := base64.RawURLEncoding.DecodeString(b)
-	if err1 != nil || err2 != nil {
-		return false
-	}
-	return hmac.Equal(aa, bb)
 }

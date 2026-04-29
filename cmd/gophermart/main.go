@@ -53,18 +53,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	tokens, err := auth.NewTokenManager(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	tokens, err := auth.NewTokenManager(cfg.JWTSecret, cfg.JWTAccessTTL)
 	if err != nil {
 		log.Error("token manager", "err", err)
 		os.Exit(1)
 	}
 
 	usersRepo := postgres.NewUsersRepo(db)
-	refreshRepo := postgres.NewRefreshTokensRepo(db)
 	ordersRepo := postgres.NewOrdersRepo(db)
 	balanceRepo := postgres.NewBalanceRepo(db)
 
-	authUC := usecase.NewAuthUsecase(usersRepo, refreshRepo, tokens)
+	authUC := usecase.NewAuthUsecase(usersRepo, tokens)
 	ordersUC := usecase.NewOrdersUsecase(ordersRepo)
 	balanceUC := usecase.NewBalanceUsecase(balanceRepo)
 

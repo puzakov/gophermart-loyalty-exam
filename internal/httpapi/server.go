@@ -40,7 +40,6 @@ func (s *Server) Router() http.Handler {
 
 	r.Post("/api/user/register", s.handleRegister)
 	r.Post("/api/user/login", s.handleLogin)
-	r.Post("/api/user/token/refresh", s.handleRefresh)
 
 	r.Group(func(ar chi.Router) {
 		ar.Use(mw.RequireAuth(s.tokens))
@@ -70,9 +69,9 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
+	w.Header().Set("Authorization", "Bearer "+t.AccessToken)
 	writeJSON(w, http.StatusOK, map[string]string{
-		"access_token":  t.AccessToken,
-		"refresh_token": t.RefreshToken,
+		"access_token": t.AccessToken,
 	})
 }
 
@@ -87,30 +86,9 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
+	w.Header().Set("Authorization", "Bearer "+t.AccessToken)
 	writeJSON(w, http.StatusOK, map[string]string{
-		"access_token":  t.AccessToken,
-		"refresh_token": t.RefreshToken,
-	})
-}
-
-type refreshReq struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
-func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
-	var req refreshReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-	t, err := s.authUC.Refresh(r.Context(), req.RefreshToken, time.Now())
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]string{
-		"access_token":  t.AccessToken,
-		"refresh_token": t.RefreshToken,
+		"access_token": t.AccessToken,
 	})
 }
 

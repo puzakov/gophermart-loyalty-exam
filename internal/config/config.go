@@ -14,9 +14,8 @@ type Config struct {
 	DatabaseURI          string
 	AccrualSystemAddress string
 
-	JWTSecret     string
-	JWTAccessTTL  time.Duration
-	JWTRefreshTTL time.Duration
+	JWTSecret    string
+	JWTAccessTTL time.Duration
 
 	AccrualWorkers      int
 	AccrualPollInterval time.Duration
@@ -34,8 +33,7 @@ func Load() (Config, error) {
 	flag.Parse()
 
 	cfg.JWTSecret = envOrDefault("JWT_SECRET", "")
-	cfg.JWTAccessTTL = envDurationOrDefault("JWT_ACCESS_TTL", 24*time.Hour)
-	cfg.JWTRefreshTTL = envDurationOrDefault("JWT_REFRESH_TTL", 30*24*time.Hour)
+	cfg.JWTAccessTTL = envDurationOrDefault("JWT_ACCESS_TTL", 30*24*time.Hour)
 
 	cfg.AccrualWorkers = envIntOrDefault("ACCRUAL_WORKERS", 5)
 	cfg.AccrualPollInterval = envDurationOrDefault("ACCRUAL_POLL_INTERVAL", 2*time.Second)
