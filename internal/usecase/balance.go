@@ -5,14 +5,19 @@ import (
 	"time"
 
 	"github.com/puzakov/gophermart-loyalty-exam/internal/domain"
-	"github.com/puzakov/gophermart-loyalty-exam/internal/storage/postgres"
 )
 
-type BalanceUsecase struct {
-	balance *postgres.BalanceRepo
+type BalanceStore interface {
+	Get(ctx context.Context, userID int64) (domain.Balance, error)
+	Withdraw(ctx context.Context, userID int64, orderNumber string, sum int64, now time.Time) error
+	ListWithdrawals(ctx context.Context, userID int64) ([]domain.Withdrawal, error)
 }
 
-func NewBalanceUsecase(balance *postgres.BalanceRepo) *BalanceUsecase {
+type BalanceUsecase struct {
+	balance BalanceStore
+}
+
+func NewBalanceUsecase(balance BalanceStore) *BalanceUsecase {
 	return &BalanceUsecase{balance: balance}
 }
 

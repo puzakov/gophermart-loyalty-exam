@@ -8,11 +8,16 @@ import (
 	"github.com/puzakov/gophermart-loyalty-exam/internal/storage/postgres"
 )
 
-type OrdersUsecase struct {
-	orders *postgres.OrdersRepo
+type OrdersStore interface {
+	Create(ctx context.Context, userID int64, number string, now time.Time) (postgres.CreateOrderResult, error)
+	ListByUser(ctx context.Context, userID int64) ([]domain.Order, error)
 }
 
-func NewOrdersUsecase(orders *postgres.OrdersRepo) *OrdersUsecase {
+type OrdersUsecase struct {
+	orders OrdersStore
+}
+
+func NewOrdersUsecase(orders OrdersStore) *OrdersUsecase {
 	return &OrdersUsecase{orders: orders}
 }
 

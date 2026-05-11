@@ -8,11 +8,15 @@ import (
 
 	"github.com/puzakov/gophermart-loyalty-exam/internal/auth"
 	"github.com/puzakov/gophermart-loyalty-exam/internal/domain"
-	"github.com/puzakov/gophermart-loyalty-exam/internal/storage/postgres"
 )
 
+type UsersStore interface {
+	Create(ctx context.Context, login, passwordHash string) (userID int64, err error)
+	GetByLogin(ctx context.Context, login string) (userID int64, passwordHash string, err error)
+}
+
 type AuthUsecase struct {
-	users  *postgres.UsersRepo
+	users  UsersStore
 	tokens *auth.TokenManager
 }
 
@@ -20,7 +24,7 @@ type Tokens struct {
 	AccessToken string
 }
 
-func NewAuthUsecase(users *postgres.UsersRepo, tokens *auth.TokenManager) *AuthUsecase {
+func NewAuthUsecase(users UsersStore, tokens *auth.TokenManager) *AuthUsecase {
 	return &AuthUsecase{users: users, tokens: tokens}
 }
 
@@ -33,7 +37,7 @@ func (u *AuthUsecase) Register(ctx context.Context, login, password string, now 
 		return Tokens{}, err
 	}
 	userID, err := u.users.Create(ctx, login, string(hash))
-	if postgres.IsUniqueViolation(err) {
+	if err == domain.ErrConflict {
 		return Tokens{}, domain.ErrConflict
 	}
 	if err != nil {
@@ -47,7 +51,7 @@ func (u *AuthUsecase) Login(ctx context.Context, login, password string, now tim
 		return Tokens{}, domain.ErrInvalidRequest
 	}
 	userID, ph, err := u.users.GetByLogin(ctx, login)
-	if postgres.IsNoRows(err) {
+	if err == domain.ErrNotFound {
 		return Tokens{}, domain.ErrUnauthorized
 	}
 	if err != nil {

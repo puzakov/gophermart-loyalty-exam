@@ -1,25 +1,61 @@
-# go-musthave-diploma-tpl
+# gophermart-loyalty-exam
 
-Шаблон репозитория для индивидуального дипломного проекта курса «Go-разработчик»
+HTTP API накопительной системы лояльности «Гофермарт».
 
-# Начало работы
+## Конфигурация
 
-1. Склонируйте репозиторий в любую подходящую директорию на вашем компьютере.
-2. В корне репозитория выполните команду `go mod init <name>` (где `<name>` — адрес вашего репозитория на GitHub без
-   префикса `https://`) для создания модуля
+Поддерживаются переменные окружения и флаги:
 
-# Обновление шаблона
+- `RUN_ADDRESS` или `-a` — адрес/порт запуска сервиса (по умолчанию `localhost:8080`)
+- `DATABASE_URI` или `-d` — DSN PostgreSQL
+- `ACCRUAL_SYSTEM_ADDRESS` или `-r` — базовый URL accrual-системы (по умолчанию `http://localhost:8081`)
 
-Чтобы иметь возможность получать обновления автотестов и других частей шаблона, выполните команду:
+Также используются:
 
+- `JWT_SECRET` — секрет подписи access JWT
+- `JWT_ACCESS_TTL` — TTL access-токена (по умолчанию `30*24h`, то есть 1 месяц)
+- `ACCRUAL_WORKERS` — число воркеров в пуле
+- `ACCRUAL_POLL_INTERVAL` — период опроса очереди заказов (например `2s`)
+
+Для разработки можно скопировать `.env.example` в `.env`.
+
+## Запуск (локально)
+
+1) Поднять PostgreSQL (2 базы) через compose:
+
+```bash
+docker compose up -d
 ```
-git remote add -m master template https://github.com/yandex-praktikum/go-musthave-diploma-tpl.git
+
+2) Запустить accrual-систему (отдельный терминал):
+
+```bash
+export RUN_ADDRESS=localhost:8081
+export DATABASE_URI="postgres://accrual_db_user:secret@localhost:5435/accrual_db_app?sslmode=disable"
+./cmd/accrual/accrual_darwin_arm64
 ```
 
-Для обновления кода автотестов выполните команду:
+3) Запустить gophermart:
 
-```
-git fetch template && git checkout template/master .github
+```bash
+go run ./cmd/gophermart -a localhost:8080 -d "postgres://gophermart_db_user:secret@localhost:5434/gophermart_db_app?sslmode=disable" -r "http://localhost:8081"
 ```
 
-Затем добавьте полученные изменения в свой репозиторий.
+Миграции выполняются автоматически при старте (папка `migrations/`).
+
+## Авторизация
+
+Используется `Authorization: Bearer <access_token>`.
+
+`POST /api/user/register` и `POST /api/user/login` возвращают:
+
+```json
+{ "access_token": "..." }
+```
+
+В дополнение сервер выставляет заголовок ответа `Authorization: Bearer <access_token>`.
+
+## Документация API
+
+- `docs/REST.md` — расширенное описание REST (примеры, коды, правила)
+- `docs/openapi.yaml` — OpenAPI 3.0 спецификация
