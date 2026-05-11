@@ -14,10 +14,12 @@
 # Binaries
 cmd/gophermart/main
 cmd/gophermart/gophermart
-
-# Dependency directories (remove the comment below to include it)
-vendor/
+cmd/gophermarttest-darwin-arm64
 
 # IDEs directories
 .idea
 .vscode
+
+# Local env
+.env
+.env.*.local
